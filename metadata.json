@@ -1,0 +1,7 @@
+{
+  "name": "Noor Inventory",
+  "description": "Smart inventory tracking for Sound Equipment (Sonorisation) and Quran Books with AI-powered insights.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
