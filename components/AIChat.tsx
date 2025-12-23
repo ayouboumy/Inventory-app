@@ -13,13 +13,6 @@ interface Message {
   id: string;
 }
 
-// Add speech recognition types
-declare global {
-  interface Window {
-    webkitSpeechRecognition: any;
-  }
-}
-
 export const AIChat: React.FC<AIChatProps> = ({ inventory }) => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([
