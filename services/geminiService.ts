@@ -9,8 +9,6 @@ export const analyzeItemWithGemini = async (itemName: string): Promise<{ categor
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `Analyze this inventory item name: "${itemName}".
-      Context: This is for a mosque or community center inventory tracking system.
-      Categories available: "Sonorisation" (Sound equipment), "Quran Book" (Religious texts).
       
       Return a JSON object with:
       1. category: "Sonorisation", "Quran Book", or "Other".
@@ -19,6 +17,8 @@ export const analyzeItemWithGemini = async (itemName: string): Promise<{ categor
       4. suggestedMinStock: Integer.
       `,
       config: {
+        systemInstruction: `Context: This is for a mosque or community center inventory tracking system.
+      Categories available: "Sonorisation" (Sound equipment), "Quran Book" (Religious texts).`,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -27,7 +27,8 @@ export const analyzeItemWithGemini = async (itemName: string): Promise<{ categor
             subsection: { type: Type.STRING },
             description: { type: Type.STRING },
             suggestedMinStock: { type: Type.INTEGER }
-          }
+          },
+          propertyOrdering: ["category", "subsection", "description", "suggestedMinStock"]
         }
       }
     });
@@ -65,12 +66,12 @@ export const chatWithInventory = async (query: string, inventory: InventoryItem[
       
       Current Inventory Data:
       ${inventoryContext}
-      
-      System Instruction:
-      You are the Inventory Assistant for "Noor Inventory". 
-      Answer strictly based on data.
-      If asked about specific subsections (e.g., "How many mics?"), filter by that subsection context.
       `,
+      config: {
+        systemInstruction: `You are the Inventory Assistant for "Noor Inventory". 
+      Answer strictly based on data.
+      If asked about specific subsections (e.g., "How many mics?"), filter by that subsection context.`
+      }
     });
 
     return response.text || "I couldn't process that request based on the current data.";
