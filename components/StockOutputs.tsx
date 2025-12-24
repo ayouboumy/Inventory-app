@@ -19,7 +19,7 @@ export const StockOutputs: React.FC<StockOutputsProps> = ({ outputs }) => {
 
     sorted.forEach(record => {
       const cat = record.category;
-      const sub = record.subsection || 'General';
+      const sub = record.subsection || 'عام';
 
       if (!groups[cat]) groups[cat] = {};
       if (!groups[cat][sub]) groups[cat][sub] = [];
@@ -33,7 +33,7 @@ export const StockOutputs: React.FC<StockOutputsProps> = ({ outputs }) => {
   const handleExportCSV = () => {
     const headers = ['Date', 'Item Name', 'Category', 'Subsection', 'Quantity', 'Destination', 'ID'];
     const rows = outputs.map(record => [
-      `"${new Date(record.date).toLocaleString()}"`,
+      `"${new Date(record.date).toLocaleString('ar-SA')}"`,
       `"${record.itemName}"`,
       record.category,
       record.subsection,
@@ -59,15 +59,23 @@ export const StockOutputs: React.FC<StockOutputsProps> = ({ outputs }) => {
 
   const categories = Object.keys(groupedOutputs).sort();
 
+  const getCategoryLabel = (cat: string) => {
+    switch(cat) {
+       case ItemCategory.SONORISATION: return 'صوتيات';
+       case ItemCategory.QURAN_BOOK: return 'مصاحف';
+       default: return 'أخرى';
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Summary Header */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-            <ArrowUpRight className="text-orange-500" /> Stock Output History
+            <ArrowUpRight className="text-orange-500" /> سجل التوزيع والخروج
           </h2>
-          <p className="text-slate-500 text-sm">Track distributed items.</p>
+          <p className="text-slate-500 text-sm">تتبع العناصر التي تم توزيعها أو إخراجها.</p>
         </div>
         
         <div className="flex flex-col md:flex-row md:items-center gap-4">
@@ -78,14 +86,14 @@ export const StockOutputs: React.FC<StockOutputsProps> = ({ outputs }) => {
                     className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1
                     ${groupBy === 'section' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                 >
-                    <Layers size={14} /> By Section
+                    <Layers size={14} /> حسب القسم
                 </button>
                 <button 
                     onClick={() => setGroupBy('date')}
                     className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1
                     ${groupBy === 'date' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                 >
-                    <Clock size={14} /> Chronological
+                    <Clock size={14} /> زمني
                 </button>
             </div>
             
@@ -94,12 +102,12 @@ export const StockOutputs: React.FC<StockOutputsProps> = ({ outputs }) => {
                   onClick={handleExportCSV}
                   className="flex items-center gap-2 bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shadow-sm"
               >
-                <Download size={14} /> Export CSV
+                <Download size={14} /> CSV
               </button>
               
-              <div className="text-right hidden md:block">
+              <div className="text-left hidden md:block">
                   <p className="text-2xl font-bold text-slate-800">{outputs.length}</p>
-                  <p className="text-[10px] text-slate-400 uppercase font-semibold">Total Out</p>
+                  <p className="text-[10px] text-slate-400 uppercase font-semibold">إجمالي الموزع</p>
               </div>
             </div>
         </div>
@@ -111,7 +119,7 @@ export const StockOutputs: React.FC<StockOutputsProps> = ({ outputs }) => {
             <div className="inline-flex bg-slate-50 p-4 rounded-full mb-3 text-slate-300">
                 <ArrowUpRight size={32} />
             </div>
-            <p className="text-slate-500">No items have been taken out of stock yet.</p>
+            <p className="text-slate-500">لم يتم إخراج أي عناصر من المخزون بعد.</p>
         </div>
       ) : groupBy === 'date' ? (
         // Simple Chronological List
@@ -123,9 +131,9 @@ export const StockOutputs: React.FC<StockOutputsProps> = ({ outputs }) => {
         <div className="space-y-8">
             {categories.map(category => {
                 const subsections = Object.keys(groupedOutputs[category]).sort();
-                const activeFilter = sectionFilters[category] || 'All';
+                const activeFilter = sectionFilters[category] || 'الكل';
                 
-                const displayedSubsections = activeFilter === 'All' 
+                const displayedSubsections = activeFilter === 'الكل' 
                     ? subsections 
                     : subsections.filter(s => s === activeFilter);
 
@@ -141,19 +149,19 @@ export const StockOutputs: React.FC<StockOutputsProps> = ({ outputs }) => {
                                      category === ItemCategory.QURAN_BOOK ? <BookOpen size={20} /> : 
                                      <Package size={20} />}
                                 </div>
-                                <h3 className="text-xl font-bold text-slate-800">{category}</h3>
+                                <h3 className="text-xl font-bold text-slate-800">{getCategoryLabel(category)}</h3>
                             </div>
 
                             {/* Per-Section Filter */}
                             <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-1.5 shadow-sm">
                                 <Filter size={14} className="text-slate-400" />
-                                <span className="text-xs font-semibold text-slate-500 whitespace-nowrap">Sub-section:</span>
+                                <span className="text-xs font-semibold text-slate-500 whitespace-nowrap">القسم الفرعي:</span>
                                 <select 
                                     value={activeFilter}
                                     onChange={(e) => setSectionFilters(prev => ({...prev, [category]: e.target.value}))}
-                                    className="bg-transparent text-slate-700 text-xs font-medium focus:outline-none cursor-pointer pr-2"
+                                    className="bg-transparent text-slate-700 text-xs font-medium focus:outline-none cursor-pointer pl-2"
                                 >
-                                    <option value="All">All ({subsections.length})</option>
+                                    <option value="الكل">الكل ({subsections.length})</option>
                                     {subsections.map(sub => (
                                         <option key={sub} value={sub}>{sub}</option>
                                     ))}
@@ -163,7 +171,7 @@ export const StockOutputs: React.FC<StockOutputsProps> = ({ outputs }) => {
 
                         <div className="grid grid-cols-1 gap-4">
                             {displayedSubsections.length === 0 && (
-                                <p className="text-sm text-slate-400 italic px-2">No records found for this subsection.</p>
+                                <p className="text-sm text-slate-400 italic px-2">لا توجد سجلات لهذا القسم الفرعي.</p>
                             )}
                             {displayedSubsections.map(subsection => (
                                 <div key={subsection} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -173,7 +181,7 @@ export const StockOutputs: React.FC<StockOutputsProps> = ({ outputs }) => {
                                             {subsection}
                                         </h4>
                                         <span className="text-xs text-slate-400 font-medium">
-                                            {groupedOutputs[category][subsection].length} records
+                                            {groupedOutputs[category][subsection].length} سجل
                                         </span>
                                     </div>
                                     <OutputTable records={groupedOutputs[category][subsection]} simple />
@@ -190,7 +198,16 @@ export const StockOutputs: React.FC<StockOutputsProps> = ({ outputs }) => {
 };
 
 // Sub-component for the table to avoid duplication
-const OutputTable: React.FC<{ records: OutputRecord[], simple?: boolean }> = ({ records, simple }) => (
+const OutputTable: React.FC<{ records: OutputRecord[], simple?: boolean }> = ({ records, simple }) => {
+  const getCategoryLabel = (cat: string) => {
+    switch(cat) {
+       case ItemCategory.SONORISATION: return 'صوتيات';
+       case ItemCategory.QURAN_BOOK: return 'مصاحف';
+       default: return 'أخرى';
+    }
+  };
+
+  return (
     <div className="w-full">
         {/* Mobile View: Card-like list */}
         <div className="md:hidden divide-y divide-slate-100">
@@ -201,7 +218,7 @@ const OutputTable: React.FC<{ records: OutputRecord[], simple?: boolean }> = ({ 
                             <span className="font-semibold text-slate-900 text-sm">{record.itemName}</span>
                             <span className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
                                 <Calendar size={10} />
-                                {new Date(record.date).toLocaleDateString()} {new Date(record.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                {new Date(record.date).toLocaleDateString('ar-SA')} {new Date(record.date).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}
                             </span>
                         </div>
                          <span className="text-orange-600 font-bold bg-orange-50 px-2 py-1 rounded text-xs whitespace-nowrap">-{record.quantity}</span>
@@ -213,7 +230,7 @@ const OutputTable: React.FC<{ records: OutputRecord[], simple?: boolean }> = ({ 
                         </div>
                         {!simple && (
                             <span className="bg-slate-100 text-slate-500 border border-slate-200 px-1.5 py-0.5 rounded text-[10px]">
-                                {record.category}
+                                {getCategoryLabel(record.category)}
                             </span>
                         )}
                     </div>
@@ -223,15 +240,15 @@ const OutputTable: React.FC<{ records: OutputRecord[], simple?: boolean }> = ({ 
 
         {/* Desktop View: Full Table */}
         <div className="hidden md:block overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-600">
+            <table className="w-full text-right text-sm text-slate-600">
                 {!simple && (
                     <thead className="bg-slate-50 text-slate-700 border-b border-slate-200">
                         <tr>
-                            <th className="px-6 py-3 font-semibold">Date</th>
-                            <th className="px-6 py-3 font-semibold">Item</th>
-                            <th className="px-6 py-3 font-semibold">Category</th>
-                            <th className="px-6 py-3 font-semibold text-center">Qty</th>
-                            <th className="px-6 py-3 font-semibold">Destination</th>
+                            <th className="px-6 py-3 font-semibold">التاريخ</th>
+                            <th className="px-6 py-3 font-semibold">العنصر</th>
+                            <th className="px-6 py-3 font-semibold">التصنيف</th>
+                            <th className="px-6 py-3 font-semibold text-center">الكمية</th>
+                            <th className="px-6 py-3 font-semibold">الوجهة</th>
                         </tr>
                     </thead>
                 )}
@@ -241,8 +258,8 @@ const OutputTable: React.FC<{ records: OutputRecord[], simple?: boolean }> = ({ 
                             <td className="px-6 py-3 whitespace-nowrap w-40">
                                 <div className="flex items-center gap-2 text-slate-500 text-xs">
                                     <Calendar size={12} />
-                                    {new Date(record.date).toLocaleDateString()}
-                                    <span className="opacity-60">{new Date(record.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                    {new Date(record.date).toLocaleDateString('ar-SA')}
+                                    <span className="opacity-60">{new Date(record.date).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</span>
                                 </div>
                             </td>
                             <td className="px-6 py-3 font-medium text-slate-900">
@@ -250,7 +267,7 @@ const OutputTable: React.FC<{ records: OutputRecord[], simple?: boolean }> = ({ 
                             </td>
                             {!simple && (
                                 <td className="px-6 py-3">
-                                    <span className="text-xs border border-slate-200 px-2 py-0.5 rounded-full">{record.category}</span>
+                                    <span className="text-xs border border-slate-200 px-2 py-0.5 rounded-full">{getCategoryLabel(record.category)}</span>
                                 </td>
                             )}
                             <td className="px-6 py-3 text-center">
@@ -268,4 +285,5 @@ const OutputTable: React.FC<{ records: OutputRecord[], simple?: boolean }> = ({ 
             </table>
         </div>
     </div>
-);
+  );
+};

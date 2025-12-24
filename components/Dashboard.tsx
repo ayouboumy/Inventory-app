@@ -37,13 +37,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ inventory, outputs }) => {
         
         // Add Current Inventory
         inventory.filter(i => i.category === cat).forEach(i => {
-          const sub = i.subsection || 'General';
+          const sub = i.subsection || 'عام';
           subMap[sub] = (subMap[sub] || 0) + i.quantity;
         });
 
         // Add Distributed Items (Outputs)
         outputs.filter(o => o.category === cat).forEach(o => {
-          const sub = o.subsection || 'General';
+          const sub = o.subsection || 'عام';
           subMap[sub] = (subMap[sub] || 0) + o.quantity;
         });
 
@@ -59,7 +59,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ inventory, outputs }) => {
   }, [inventory, outputs]);
 
   const data = activeTab === ItemCategory.SONORISATION ? stats.sonorisationSubsections : stats.quranSubsections;
-  const emptyMessage = data.length === 0 ? "No data available for this category." : null;
+  const emptyMessage = data.length === 0 ? "لا توجد بيانات متاحة لهذا التصنيف." : null;
   const activeColor = activeTab === ItemCategory.SONORISATION ? 'text-blue-600' : 'text-emerald-600';
 
   const handleLowStockClick = () => {
@@ -75,32 +75,32 @@ export const Dashboard: React.FC<DashboardProps> = ({ inventory, outputs }) => {
         
         {/* Sonorisation Card */}
         <div 
-             className={`p-6 rounded-xl shadow-sm border transition-all cursor-pointer flex items-center space-x-4
+             className={`p-6 rounded-xl shadow-sm border transition-all cursor-pointer flex items-center space-x-4 space-x-reverse
              ${activeTab === ItemCategory.SONORISATION ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-300' : 'bg-white border-slate-100 hover:bg-slate-50'}`}
              onClick={() => setActiveTab(ItemCategory.SONORISATION)}>
           <div className={`p-3 rounded-lg ${activeTab === ItemCategory.SONORISATION ? 'bg-blue-200 text-blue-700' : 'bg-blue-50 text-blue-600'}`}>
             <Music size={24} />
           </div>
           <div>
-            <p className="text-sm text-slate-500 font-medium">Sound Equipment</p>
+            <p className="text-sm text-slate-500 font-medium">الصوتيات والمعدات</p>
             <h3 className="text-2xl font-bold text-slate-800">
-              {stats.sonorisationTotal} <span className="text-xs font-normal text-slate-500">total assets</span>
+              {stats.sonorisationTotal} <span className="text-xs font-normal text-slate-500">إجمالي الأصول</span>
             </h3>
           </div>
         </div>
 
         {/* Quran Card */}
         <div 
-             className={`p-6 rounded-xl shadow-sm border transition-all cursor-pointer flex items-center space-x-4
+             className={`p-6 rounded-xl shadow-sm border transition-all cursor-pointer flex items-center space-x-4 space-x-reverse
              ${activeTab === ItemCategory.QURAN_BOOK ? 'bg-emerald-50 border-emerald-200 ring-1 ring-emerald-300' : 'bg-white border-slate-100 hover:bg-slate-50'}`}
              onClick={() => setActiveTab(ItemCategory.QURAN_BOOK)}>
           <div className={`p-3 rounded-lg ${activeTab === ItemCategory.QURAN_BOOK ? 'bg-emerald-200 text-emerald-700' : 'bg-emerald-50 text-emerald-600'}`}>
             <Book size={24} />
           </div>
           <div>
-            <p className="text-sm text-slate-500 font-medium">Quran & Books</p>
+            <p className="text-sm text-slate-500 font-medium">المصاحف والكتب</p>
             <h3 className="text-2xl font-bold text-slate-800">
-              {stats.quranTotal} <span className="text-xs font-normal text-slate-500">total assets</span>
+              {stats.quranTotal} <span className="text-xs font-normal text-slate-500">إجمالي الأصول</span>
             </h3>
           </div>
         </div>
@@ -108,7 +108,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ inventory, outputs }) => {
         {/* Low Stock Card */}
         <div 
           onClick={handleLowStockClick}
-          className={`p-6 rounded-xl shadow-sm border transition-all flex items-center space-x-4
+          className={`p-6 rounded-xl shadow-sm border transition-all flex items-center space-x-4 space-x-reverse
             ${stats.lowStockItems.length > 0 
               ? 'bg-white border-slate-100 hover:bg-red-50 hover:border-red-200 cursor-pointer group ring-offset-2 focus:ring-2' 
               : 'bg-slate-50 border-slate-100 opacity-60 cursor-default'}`}
@@ -118,7 +118,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ inventory, outputs }) => {
             <AlertTriangle size={24} />
           </div>
           <div>
-            <p className="text-sm text-slate-500 font-medium">Low Stock Alerts</p>
+            <p className="text-sm text-slate-500 font-medium">تنبيهات المخزون</p>
             <h3 className={`text-2xl font-bold transition-colors ${stats.lowStockItems.length > 0 ? 'text-slate-800 group-hover:text-red-900' : 'text-slate-400'}`}>
               {stats.lowStockItems.length}
             </h3>
@@ -134,7 +134,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ inventory, outputs }) => {
             <div className="lg:col-span-1 bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col">
                 <h3 className={`text-lg font-bold mb-4 flex items-center gap-2 ${activeColor}`}>
                     {activeTab === ItemCategory.SONORISATION ? <Music size={20}/> : <Book size={20}/>}
-                    {activeTab === ItemCategory.SONORISATION ? 'Sonorisation' : 'Quran Books'} Distribution
+                    توزيع {activeTab === ItemCategory.SONORISATION ? 'الصوتيات' : 'المصاحف'}
                 </h3>
                 {emptyMessage ? (
                      <div className="flex-1 flex items-center justify-center text-slate-400 text-sm italic">{emptyMessage}</div>
@@ -161,7 +161,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ inventory, outputs }) => {
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                            <div className="text-center">
                              <span className="block text-2xl font-bold text-slate-700">{data.reduce((a,b)=>a+b.value,0)}</span>
-                             <span className="text-[10px] text-slate-400 uppercase tracking-wide">Total Units</span>
+                             <span className="text-[10px] text-slate-400 uppercase tracking-wide">وحدة</span>
                            </div>
                         </div>
                     </div>
@@ -172,23 +172,23 @@ export const Dashboard: React.FC<DashboardProps> = ({ inventory, outputs }) => {
             <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                        <ListFilter size={20} className="text-slate-400" /> Subsection Details
+                        <ListFilter size={20} className="text-slate-400" /> تفاصيل الأقسام الفرعية
                     </h3>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-slate-400 italic">Total (Inventory + Distributed)</span>
+                      <span className="text-xs text-slate-400 italic">(المخزون الحالي + الموزع)</span>
                     </div>
                 </div>
                 
                 <div className="flex-1 overflow-auto">
                     {emptyMessage ? (
-                         <div className="text-center py-8 text-slate-400 italic">No items found in this category.</div>
+                         <div className="text-center py-8 text-slate-400 italic">لا توجد عناصر في هذا التصنيف.</div>
                     ) : (
-                        <table className="w-full text-left text-sm">
+                        <table className="w-full text-right text-sm">
                         <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200">
                             <tr>
-                                <th className="px-6 py-4 rounded-tl-lg w-1/2">Subsection Name</th>
-                                <th className="px-6 py-4 text-right w-24">Count</th>
-                                <th className="px-6 py-4 rounded-tr-lg w-1/3">Share</th>
+                                <th className="px-6 py-4 rounded-tr-lg w-1/2">القسم الفرعي</th>
+                                <th className="px-6 py-4 text-left w-24">العدد</th>
+                                <th className="px-6 py-4 rounded-tl-lg w-1/3">النسبة</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -203,7 +203,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ inventory, outputs }) => {
                                                 {item.name}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-right">
+                                        <td className="px-6 py-4 text-left">
                                             <span className="font-mono font-semibold text-slate-600">{item.value}</span>
                                         </td>
                                         <td className="px-6 py-4">
@@ -211,7 +211,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ inventory, outputs }) => {
                                                 <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden min-w-[60px]">
                                                     <div className="h-full rounded-full transition-all duration-500 ease-out" style={{ width: `${percent}%`, backgroundColor: COLORS[idx % COLORS.length] }}></div>
                                                 </div>
-                                                <span className="text-xs text-slate-400 font-medium w-8 text-right tabular-nums">{percent}%</span>
+                                                <span className="text-xs text-slate-400 font-medium w-8 text-left tabular-nums">{percent}%</span>
                                             </div>
                                         </td>
                                     </tr>
@@ -231,17 +231,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ inventory, outputs }) => {
           className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 scroll-mt-24 transition-colors duration-1000 target:bg-red-50/30"
         >
           <h3 className="text-lg font-bold text-red-600 mb-4 flex items-center gap-2">
-            <AlertTriangle size={20} /> Actions Required: Low Stock
+            <AlertTriangle size={20} /> إجراء مطلوب: مخزون منخفض
           </h3>
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-600">
-              <thead className="bg-red-50 text-red-700 uppercase font-semibold">
+            <table className="w-full text-right text-sm text-slate-600">
+              <thead className="bg-red-50 text-red-700 font-semibold">
                 <tr>
-                  <th className="px-4 py-3">Item Name</th>
-                  <th className="px-4 py-3">Category</th>
-                  <th className="px-4 py-3">Current Qty</th>
-                  <th className="px-4 py-3">Min Level</th>
-                  <th className="px-4 py-3">Location</th>
+                  <th className="px-4 py-3">اسم العنصر</th>
+                  <th className="px-4 py-3">التصنيف</th>
+                  <th className="px-4 py-3">الكمية الحالية</th>
+                  <th className="px-4 py-3">الحد الأدنى</th>
+                  <th className="px-4 py-3">المكان</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -253,7 +253,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ inventory, outputs }) => {
                         ${item.category === ItemCategory.SONORISATION ? 'bg-blue-100 text-blue-700' : 
                           item.category === ItemCategory.QURAN_BOOK ? 'bg-emerald-100 text-emerald-700' : 
                           'bg-slate-100 text-slate-700'}`}>
-                        {item.category}
+                        {item.category === ItemCategory.SONORISATION ? 'صوتيات' : 
+                         item.category === ItemCategory.QURAN_BOOK ? 'مصاحف' : 'أخرى'}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-red-600 font-bold">{item.quantity}</td>

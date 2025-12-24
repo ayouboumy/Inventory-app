@@ -5,15 +5,16 @@ import { InventoryTable } from './components/InventoryTable';
 import { AIChat } from './components/AIChat';
 import { StockOutputs } from './components/StockOutputs';
 import { LoginScreen } from './components/LoginScreen';
+import { VirtualKeyboard } from './components/VirtualKeyboard';
 import { LayoutDashboard, Mic2, BookOpen, Sparkles, Menu, X, ArrowUpRight, LogOut } from 'lucide-react';
 
-// Mock Initial Data
+// Mock Initial Data (Arabic)
 const INITIAL_DATA: InventoryItem[] = [
-  { id: '1', name: 'Shure SM58', category: ItemCategory.SONORISATION, subsection: 'Microphones', quantity: 4, location: 'Main Hall', description: 'Standard vocal mic', minStockLevel: 2, lastUpdated: new Date().toISOString() },
-  { id: '2', name: 'XLR Cable 10m', category: ItemCategory.SONORISATION, subsection: 'Cables', quantity: 12, location: 'Storage Room B', description: 'Balanced audio cables', minStockLevel: 5, lastUpdated: new Date().toISOString() },
-  { id: '3', name: 'Mushaf Madinah (Large)', category: ItemCategory.QURAN_BOOK, subsection: 'Mushaf', quantity: 45, location: 'Shelf A1-A3', description: 'Blue cover standard print', minStockLevel: 10, lastUpdated: new Date().toISOString() },
-  { id: '4', name: 'Yamaha MG10XU', category: ItemCategory.SONORISATION, subsection: 'Mixers', quantity: 1, location: 'Control Booth', description: 'Mixing console', minStockLevel: 1, lastUpdated: new Date().toISOString() },
-  { id: '5', name: 'Juz Amma Pamphlet', category: ItemCategory.QURAN_BOOK, subsection: 'Education', quantity: 100, location: 'Entrance Rack', description: 'For students', minStockLevel: 20, lastUpdated: new Date().toISOString() },
+  { id: '1', name: 'ميكروفون شور SM58', category: ItemCategory.SONORISATION, subsection: 'ميكروفونات', quantity: 4, location: 'القاعة الرئيسية', description: 'ميكروفون صوتي قياسي', minStockLevel: 2, lastUpdated: new Date().toISOString() },
+  { id: '2', name: 'كابل XLR 10م', category: ItemCategory.SONORISATION, subsection: 'كابلات', quantity: 12, location: 'مخزن ب', description: 'كابلات صوت متوازنة', minStockLevel: 5, lastUpdated: new Date().toISOString() },
+  { id: '3', name: 'مصحف المدينة (كبير)', category: ItemCategory.QURAN_BOOK, subsection: 'مصاحف', quantity: 45, location: 'الرف A1-A3', description: 'طبعة قياسية غلاف أزرق', minStockLevel: 10, lastUpdated: new Date().toISOString() },
+  { id: '4', name: 'ياماها MG10XU', category: ItemCategory.SONORISATION, subsection: 'ميكسر', quantity: 1, location: 'غرفة التحكم', description: 'وحدة خلط صوت', minStockLevel: 1, lastUpdated: new Date().toISOString() },
+  { id: '5', name: 'كتيب جزء عم', category: ItemCategory.QURAN_BOOK, subsection: 'تعليمي', quantity: 100, location: 'رف المدخل', description: 'للطلاب', minStockLevel: 20, lastUpdated: new Date().toISOString() },
 ];
 
 const App: React.FC = () => {
@@ -80,7 +81,7 @@ const App: React.FC = () => {
       itemId: item.id,
       itemName: item.name,
       category: item.category,
-      subsection: item.subsection || 'General',
+      subsection: item.subsection || 'عام',
       quantity: quantity,
       destination: destination,
       date: new Date().toISOString()
@@ -116,35 +117,35 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-slate-50 flex font-sans">
       
       {/* Sidebar Desktop */}
-      <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-slate-200 h-screen sticky top-0">
+      <aside className="hidden lg:flex flex-col w-64 bg-white border-l border-slate-200 h-screen sticky top-0">
         <div className="p-6 border-b border-slate-100">
           <div className="flex items-center gap-2 text-emerald-700 font-bold text-xl">
             <div className="bg-emerald-100 p-2 rounded-lg">
               <BookOpen size={24} className="text-emerald-600" />
             </div>
-            <span>Noor<span className="text-slate-800">Inv</span></span>
+            <span>ضبط <span className="text-slate-800">التوزيع</span></span>
           </div>
         </div>
 
         <nav className="flex-1 p-4 space-y-2">
-          <NavItem id="dashboard" label="Dashboard" icon={LayoutDashboard} />
+          <NavItem id="dashboard" label="لوحة التحكم" icon={LayoutDashboard} />
           
           <div className="pt-4 pb-2 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-            Sections
+            الأقسام
           </div>
-          <NavItem id="sonorisation" label="Sonorisation" icon={Mic2} />
-          <NavItem id="quran" label="Quran Books" icon={BookOpen} />
+          <NavItem id="sonorisation" label="الصوتيات" icon={Mic2} />
+          <NavItem id="quran" label="المصاحف والكتب" icon={BookOpen} />
           
           <div className="pt-4 pb-2 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-            Activity
+            النشاط
           </div>
-          <NavItem id="outputs" label="Stock Outputs" icon={ArrowUpRight} />
-          <NavItem id="ai-chat" label="AI Assistant" icon={Sparkles} />
+          <NavItem id="outputs" label="سجل التوزيع" icon={ArrowUpRight} />
+          <NavItem id="ai-chat" label="المساعد الذكي" icon={Sparkles} />
         </nav>
 
         <div className="p-4 border-t border-slate-100 space-y-4">
           <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-            <p className="text-xs text-slate-400 mb-1">Total Assets</p>
+            <p className="text-xs text-slate-400 mb-1">إجمالي الأصول</p>
             <p className="text-2xl font-bold text-slate-800">{inventory.reduce((a, b) => a + b.quantity, 0)}</p>
           </div>
           
@@ -152,18 +153,18 @@ const App: React.FC = () => {
             onClick={handleLogout}
             className="w-full flex items-center justify-center gap-2 text-slate-500 hover:text-red-600 py-2 text-xs font-semibold transition-colors"
           >
-            <LogOut size={14} /> Sign Out
+            <LogOut size={14} /> تسجيل الخروج
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
+      <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
         
         {/* Mobile Header */}
         <header className="lg:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center z-20">
           <div className="flex items-center gap-2 font-bold text-lg text-slate-800">
-            <BookOpen size={20} className="text-emerald-600" /> NoorInv
+            <BookOpen size={20} className="text-emerald-600" /> ضبط التوزيع
           </div>
           <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-slate-600 p-2">
             {isMobileMenuOpen ? <X /> : <Menu />}
@@ -174,37 +175,37 @@ const App: React.FC = () => {
         {isMobileMenuOpen && (
           <div className="fixed inset-0 bg-white z-10 pt-20 px-4 pb-4 lg:hidden">
             <div className="space-y-2">
-              <NavItem id="dashboard" label="Dashboard" icon={LayoutDashboard} />
-              <NavItem id="sonorisation" label="Sonorisation" icon={Mic2} />
-              <NavItem id="quran" label="Quran Books" icon={BookOpen} />
-              <NavItem id="outputs" label="Stock Outputs" icon={ArrowUpRight} />
-              <NavItem id="ai-chat" label="AI Assistant" icon={Sparkles} />
+              <NavItem id="dashboard" label="لوحة التحكم" icon={LayoutDashboard} />
+              <NavItem id="sonorisation" label="الصوتيات" icon={Mic2} />
+              <NavItem id="quran" label="المصاحف والكتب" icon={BookOpen} />
+              <NavItem id="outputs" label="سجل التوزيع" icon={ArrowUpRight} />
+              <NavItem id="ai-chat" label="المساعد الذكي" icon={Sparkles} />
               <div className="border-t border-slate-100 my-2"></div>
               <button 
                 onClick={handleLogout}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-red-600 hover:bg-red-50"
               >
-                <LogOut size={20} /> Sign Out
+                <LogOut size={20} /> تسجيل الخروج
               </button>
             </div>
           </div>
         )}
 
-        <div className="flex-1 overflow-auto p-4 lg:p-8">
+        <div className="flex-1 overflow-auto p-4 lg:p-8 pb-32">
           <div className="max-w-7xl mx-auto">
             
             <div className="mb-8">
               <h1 className="text-2xl lg:text-3xl font-bold text-slate-800 capitalize">
-                {view === 'sonorisation' && 'Sound Equipment'}
-                {view === 'quran' && 'Quran & Books'}
-                {view === 'outputs' && 'Stock Output History'}
-                {view === 'dashboard' && 'Dashboard'}
-                {view === 'ai-chat' && 'AI Assistant'}
+                {view === 'sonorisation' && 'معدات الصوت'}
+                {view === 'quran' && 'المصاحف والكتب'}
+                {view === 'outputs' && 'سجل خروج المخزون'}
+                {view === 'dashboard' && 'لوحة التحكم'}
+                {view === 'ai-chat' && 'المساعد الذكي'}
               </h1>
               <p className="text-slate-500 mt-1">
-                {view === 'sonorisation' && 'Manage microphones, speakers, cables, and mixers.'}
-                {view === 'quran' && 'Manage Mushaf stock, educational pamphlets, and religious texts.'}
-                {view === 'outputs' && 'History of items taken out of inventory.'}
+                {view === 'sonorisation' && 'إدارة الميكروفونات، السماعات، الكابلات، وأجهزة الصوت.'}
+                {view === 'quran' && 'إدارة مخزون المصاحف، الكتيبات التعليمية، والنصوص الدينية.'}
+                {view === 'outputs' && 'تاريخ العناصر التي تم توزيعها أو إخراجها من المخزون.'}
               </p>
             </div>
 
@@ -238,6 +239,9 @@ const App: React.FC = () => {
 
           </div>
         </div>
+      
+        {/* Virtual Keyboard Component */}
+        <VirtualKeyboard />
       </main>
     </div>
   );

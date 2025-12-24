@@ -8,17 +8,17 @@ export const analyzeItemWithGemini = async (itemName: string): Promise<{ categor
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Analyze this inventory item name: "${itemName}".
+      contents: `قم بتحليل اسم عنصر المخزون هذا: "${itemName}".
       
-      Return a JSON object with:
-      1. category: "Sonorisation", "Quran Book", or "Other".
-      2. subsection: A specific concise type (e.g., "Microphones", "Cables", "Speakers", "Mushaf", "Education").
-      3. description: A short, professional description.
-      4. suggestedMinStock: Integer.
+      أعد كائن JSON يحتوي على:
+      1. category: "Sonorisation" أو "Quran Book" أو "Other".
+      2. subsection: نوع محدد ومختصر باللغة العربية (مثال: "ميكروفونات"، "كابلات"، "سماعات"، "مصاحف"، "كتب تعليمية").
+      3. description: وصف قصير واحترافي باللغة العربية.
+      4. suggestedMinStock: عدد صحيح (Integer).
       `,
       config: {
-        systemInstruction: `Context: This is for a mosque or community center inventory tracking system.
-      Categories available: "Sonorisation" (Sound equipment), "Quran Book" (Religious texts).`,
+        systemInstruction: `السياق: هذا نظام تتبع مخزون لمسجد أو مركز مجتمعي.
+      الفئات المتاحة: "Sonorisation" (معدات صوتية)، "Quran Book" (نصوص دينية ومصاحف).`,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -41,8 +41,8 @@ export const analyzeItemWithGemini = async (itemName: string): Promise<{ categor
     console.error("Gemini analysis failed:", error);
     return {
       category: ItemCategory.OTHER,
-      subsection: "General",
-      description: "Manual entry required",
+      subsection: "عام",
+      description: "إدخال يدوي مطلوب",
       suggestedMinStock: 5
     };
   }
@@ -62,21 +62,21 @@ export const chatWithInventory = async (query: string, inventory: InventoryItem[
 
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `User Query: "${query}"
+      contents: `سؤال المستخدم: "${query}"
       
-      Current Inventory Data:
+      بيانات المخزون الحالية:
       ${inventoryContext}
       `,
       config: {
-        systemInstruction: `You are the Inventory Assistant for "Noor Inventory". 
-      Answer strictly based on data.
-      If asked about specific subsections (e.g., "How many mics?"), filter by that subsection context.`
+        systemInstruction: `أنت المساعد الذكي لـ "منصة ضبط التوزيع". 
+      أجب باللغة العربية بدقة بناءً على البيانات المقدمة.
+      إذا سُئلت عن أقسام محددة (مثل "كم عدد الميكروفونات؟")، قم بالتتصفية بناءً على سياق القسم الفرعي.`
       }
     });
 
-    return response.text || "I couldn't process that request based on the current data.";
+    return response.text || "لم أتمكن من معالجة الطلب بناءً على البيانات الحالية.";
   } catch (error) {
     console.error("Inventory chat failed:", error);
-    return "Sorry, I'm having trouble connecting to the AI service right now.";
+    return "عذراً، أواجه صعوبة في الاتصال بخدمة الذكاء الاصطناعي حالياً.";
   }
 };

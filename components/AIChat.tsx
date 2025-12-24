@@ -18,7 +18,7 @@ export const AIChat: React.FC<AIChatProps> = ({ inventory }) => {
   const [messages, setMessages] = useState<Message[]>([
     { 
       role: 'assistant', 
-      content: 'Salaam! I am your Noor Inventory assistant. Ask me anything about your stock of Sonorisation equipment or Quran books.', 
+      content: 'السلام عليكم! أنا مساعدك الذكي في منصة ضبط التوزيع. اسألني أي شيء عن مخزون الصوتيات أو المصاحف.', 
       id: 'welcome' 
     }
   ]);
@@ -43,7 +43,7 @@ export const AIChat: React.FC<AIChatProps> = ({ inventory }) => {
       const recognition = new window.webkitSpeechRecognition();
       recognition.continuous = false;
       recognition.interimResults = false;
-      recognition.lang = 'en-US';
+      recognition.lang = 'ar-SA'; // Set to Arabic
 
       recognition.onstart = () => setIsListening(true);
       recognition.onend = () => setIsListening(false);
@@ -81,7 +81,7 @@ export const AIChat: React.FC<AIChatProps> = ({ inventory }) => {
       const responseText = await chatWithInventory(input, inventory);
       setMessages(prev => [...prev, { role: 'assistant', content: responseText, id: crypto.randomUUID() }]);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'assistant', content: "I encountered an error processing that request.", id: crypto.randomUUID() }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: "واجهت مشكلة في معالجة طلبك.", id: crypto.randomUUID() }]);
     } finally {
       setIsLoading(false);
     }
@@ -96,8 +96,8 @@ export const AIChat: React.FC<AIChatProps> = ({ inventory }) => {
           <Bot size={18} />
         </div>
         <div>
-          <h3 className="font-semibold text-slate-800 text-sm">Inventory Intelligence</h3>
-          <p className="text-xs text-slate-500">Powered by Gemini 3 Flash</p>
+          <h3 className="font-semibold text-slate-800 text-sm">ذكاء المخزون</h3>
+          <p className="text-xs text-slate-500">مدعوم بواسطة Gemini 3 Flash</p>
         </div>
       </div>
 
@@ -111,8 +111,8 @@ export const AIChat: React.FC<AIChatProps> = ({ inventory }) => {
               </div>
               <div className={`p-3 rounded-2xl text-sm leading-relaxed 
                 ${msg.role === 'user' 
-                  ? 'bg-slate-800 text-white rounded-tr-none' 
-                  : 'bg-slate-100 text-slate-800 rounded-tl-none border border-slate-200'}`}>
+                  ? 'bg-slate-800 text-white rounded-tl-none' 
+                  : 'bg-slate-100 text-slate-800 rounded-tr-none border border-slate-200'}`}>
                 {msg.content}
               </div>
             </div>
@@ -124,8 +124,8 @@ export const AIChat: React.FC<AIChatProps> = ({ inventory }) => {
               <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
                 <Bot size={16} />
               </div>
-              <div className="bg-slate-50 p-3 rounded-2xl rounded-tl-none border border-slate-100 flex items-center gap-2 text-slate-500 text-sm">
-                <Loader2 size={14} className="animate-spin" /> Thinking...
+              <div className="bg-slate-50 p-3 rounded-2xl rounded-tr-none border border-slate-100 flex items-center gap-2 text-slate-500 text-sm">
+                <Loader2 size={14} className="animate-spin" /> جاري التفكير...
               </div>
             </div>
           </div>
@@ -143,7 +143,7 @@ export const AIChat: React.FC<AIChatProps> = ({ inventory }) => {
                 ${isListening 
                   ? 'bg-red-100 text-red-600 animate-pulse ring-2 ring-red-400' 
                   : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
-              title="Voice Input"
+              title="تحدث"
             >
               <Mic size={18} />
             </button>
@@ -151,7 +151,7 @@ export const AIChat: React.FC<AIChatProps> = ({ inventory }) => {
           <input 
             type="text" 
             className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
-            placeholder={isListening ? "Listening..." : "Ask about quantity, locations, or status..."}
+            placeholder={isListening ? "جاري الاستماع..." : "اسأل عن الكميات، الأماكن، أو الحالة..."}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={isLoading}
@@ -161,10 +161,10 @@ export const AIChat: React.FC<AIChatProps> = ({ inventory }) => {
             disabled={isLoading || !input.trim()}
             className="bg-emerald-600 text-white p-3 rounded-xl hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            <Send size={18} />
+            <Send size={18} className="rotate-180" /> {/* Rotated for RTL if needed, usually icon direction depends on svg, arrow icons usually need flip */}
           </button>
         </div>
-        <p className="text-center text-[10px] text-slate-400 mt-2">AI can make mistakes. Please verify important stock levels manually.</p>
+        <p className="text-center text-[10px] text-slate-400 mt-2">الذكاء الاصطناعي قد يخطئ. يرجى التحقق من مستويات المخزون المهمة يدوياً.</p>
       </form>
     </div>
   );

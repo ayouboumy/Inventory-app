@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { InventoryItem, ItemCategory } from '../types';
-import { Search, Plus, Edit2, Trash2, MapPin, Sparkles, LogOut, ArrowRight, Tag, AlertCircle, Download, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, MapPin, Sparkles, LogOut, ArrowLeft, Tag, AlertCircle, Download, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { analyzeItemWithGemini } from '../services/geminiService';
 
 interface InventoryTableProps {
@@ -29,7 +29,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
   onOutput
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeSubsection, setActiveSubsection] = useState<string>('All');
+  const [activeSubsection, setActiveSubsection] = useState<string>('الكل');
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'name', direction: 'asc' });
   
   // Modal States
@@ -38,6 +38,9 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
   const [itemToDelete, setItemToDelete] = useState<InventoryItem | null>(null);
   
   const [selectedItemForOutput, setSelectedItemForOutput] = useState<InventoryItem | null>(null);
+  
+  // Validation State
+  const [validationError, setValidationError] = useState<string | null>(null);
   
   // Output Form State
   const [outputQty, setOutputQty] = useState(1);
@@ -71,7 +74,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
       const matchesCategory = categoryFilter ? item.category === categoryFilter : true;
       const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                             item.location.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesSubsection = activeSubsection === 'All' || item.subsection === activeSubsection;
+      const matchesSubsection = activeSubsection === 'الكل' || item.subsection === activeSubsection;
       
       return matchesCategory && matchesSearch && matchesSubsection;
     });
@@ -90,8 +93,8 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
   // Extract unique subsections for tabs
   const subsections = useMemo(() => {
     const relevantItems = categoryFilter ? inventory.filter(i => i.category === categoryFilter) : inventory;
-    const subs = Array.from(new Set(relevantItems.map(i => i.subsection || 'General')));
-    return ['All', ...subs.sort()];
+    const subs = Array.from(new Set(relevantItems.map(i => i.subsection || 'عام')));
+    return ['الكل', ...subs.sort()];
   }, [inventory, categoryFilter]);
 
   // Handlers
@@ -126,6 +129,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
   const handleSmartFill = async () => {
     if (!formData.name) return;
     setIsAnalyzing(true);
+    setValidationError(null);
     try {
       const result = await analyzeItemWithGemini(formData.name);
       setFormData(prev => ({
@@ -137,6 +141,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
       }));
     } catch (e) {
       console.error(e);
+      setValidationError("فشل التحليل الذكي. يرجى إدخال البيانات يدوياً.");
     } finally {
       setIsAnalyzing(false);
     }
@@ -144,15 +149,31 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setValidationError(null);
+
+    // Validation
+    if (!formData.name || !formData.name.trim()) {
+      setValidationError("يرجى إدخال اسم العنصر.");
+      return;
+    }
+    if ((formData.quantity ?? 0) < 0) {
+      setValidationError("الكمية لا يمكن أن تكون أقل من صفر.");
+      return;
+    }
+    if ((formData.minStockLevel ?? 0) < 0) {
+      setValidationError("الحد الأدنى للمخزون لا يمكن أن يكون سالباً.");
+      return;
+    }
+
     const item: InventoryItem = {
       id: isEditing || crypto.randomUUID(),
-      name: formData.name || 'Unnamed Item',
+      name: formData.name.trim(),
       category: formData.category || ItemCategory.OTHER,
-      subsection: formData.subsection || 'General',
+      subsection: formData.subsection?.trim() || 'عام',
       quantity: Number(formData.quantity) || 0,
       minStockLevel: Number(formData.minStockLevel) || 0,
-      location: formData.location || 'Unknown',
-      description: formData.description || '',
+      location: formData.location?.trim() || 'غير محدد',
+      description: formData.description?.trim() || '',
       lastUpdated: new Date().toISOString()
     };
 
@@ -166,7 +187,23 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
 
   const handleOutputSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setValidationError(null);
+
     if (selectedItemForOutput) {
+      // Validation
+      if (outputQty <= 0) {
+        setValidationError("يرجى إدخال كمية صحيحة أكبر من صفر.");
+        return;
+      }
+      if (outputQty > selectedItemForOutput.quantity) {
+        setValidationError(`الكمية المطلوبة تتجاوز المخزون المتاح (${selectedItemForOutput.quantity}).`);
+        return;
+      }
+      if (!outputDestination || !outputDestination.trim()) {
+        setValidationError("يرجى تحديد وجهة الصرف.");
+        return;
+      }
+
       onOutput(selectedItemForOutput.id, outputQty, outputDestination);
       setIsOutputModalOpen(false);
       setSelectedItemForOutput(null);
@@ -183,6 +220,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
   };
 
   const openModal = (item?: InventoryItem) => {
+    setValidationError(null);
     if (item) {
       setIsEditing(item.id);
       setFormData(item);
@@ -199,6 +237,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
   };
 
   const openOutputModal = (item: InventoryItem) => {
+    setValidationError(null);
     setSelectedItemForOutput(item);
     setOutputQty(1);
     setOutputDestination('');
@@ -208,6 +247,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
   const closeModal = () => {
     setIsModalOpen(false);
     setFormData({});
+    setValidationError(null);
   };
 
   // Sort Icon Helper
@@ -216,6 +256,14 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
     return sortConfig.direction === 'asc' 
       ? <ArrowUp size={14} className="text-emerald-600" /> 
       : <ArrowDown size={14} className="text-emerald-600" />;
+  };
+
+  const getCategoryLabel = (cat: ItemCategory) => {
+     switch(cat) {
+        case ItemCategory.SONORISATION: return 'صوتيات';
+        case ItemCategory.QURAN_BOOK: return 'مصاحف';
+        default: return 'أخرى';
+     }
   };
 
   return (
@@ -227,7 +275,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
             <Search className="text-slate-400" size={18} />
             <input 
               type="text"
-              placeholder="Search items..."
+              placeholder="بحث عن عنصر..."
               className="bg-transparent border-none outline-none text-sm w-full text-slate-700"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -238,15 +286,15 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
             <button 
               onClick={handleExportCSV}
               className="flex items-center gap-2 bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm whitespace-nowrap"
-              title="Export visible items to CSV"
+              title="تصدير العناصر إلى CSV"
             >
-              <Download size={18} /> Export
+              <Download size={18} /> تصدير
             </button>
             <button 
               onClick={() => openModal()}
               className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm whitespace-nowrap"
             >
-              <Plus size={18} /> Add {categoryFilter ? categoryFilter.replace('Book', '') : 'Item'}
+              <Plus size={18} /> إضافة {categoryFilter ? (categoryFilter === ItemCategory.SONORISATION ? 'جهاز' : 'كتاب') : 'عنصر'}
             </button>
           </div>
         </div>
@@ -273,7 +321,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
       {/* Table */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-600">
+          <table className="w-full text-right text-sm text-slate-600">
             <thead className="bg-slate-50 text-slate-700 border-b border-slate-200">
               <tr>
                 <th 
@@ -281,7 +329,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                   className="px-6 py-4 font-semibold cursor-pointer hover:bg-slate-100 transition-colors select-none"
                 >
                   <div className="flex items-center gap-2">
-                    Item Details <SortIcon column="name" />
+                    تفاصيل العنصر <SortIcon column="name" />
                   </div>
                 </th>
                 <th 
@@ -289,7 +337,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                   className="px-6 py-4 font-semibold text-center cursor-pointer hover:bg-slate-100 transition-colors select-none"
                 >
                   <div className="flex items-center justify-center gap-2">
-                    In Stock <SortIcon column="quantity" />
+                    المخزون <SortIcon column="quantity" />
                   </div>
                 </th>
                 <th 
@@ -297,10 +345,10 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                   className="px-6 py-4 font-semibold cursor-pointer hover:bg-slate-100 transition-colors select-none"
                 >
                    <div className="flex items-center gap-2">
-                    Location <SortIcon column="location" />
+                    المكان <SortIcon column="location" />
                   </div>
                 </th>
-                <th className="px-6 py-4 font-semibold text-right">Actions</th>
+                <th className="px-6 py-4 font-semibold text-left">إجراءات</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -309,7 +357,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                   <td colSpan={4} className="px-6 py-12 text-center text-slate-400">
                     <div className="flex flex-col items-center gap-2">
                       <Search size={32} className="opacity-20"/>
-                      <p>No items found in {activeSubsection !== 'All' ? activeSubsection : 'this section'}.</p>
+                      <p>لا توجد عناصر في {activeSubsection !== 'الكل' ? activeSubsection : 'هذا القسم'}.</p>
                     </div>
                   </td>
                 </tr>
@@ -321,10 +369,10 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                         <span className="font-semibold text-slate-900 text-base">{item.name}</span>
                         <div className="flex items-center gap-2">
                           <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wider">
-                            {item.subsection || 'General'}
+                            {item.subsection || 'عام'}
                           </span>
                           {!categoryFilter && (
-                             <span className="text-[10px] text-slate-400 border border-slate-200 px-1.5 rounded">{item.category}</span>
+                             <span className="text-[10px] text-slate-400 border border-slate-200 px-1.5 rounded">{getCategoryLabel(item.category)}</span>
                           )}
                         </div>
                         {item.description && <span className="text-xs text-slate-400 mt-1">{item.description}</span>}
@@ -336,7 +384,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                           {item.quantity}
                         </span>
                         {item.quantity <= item.minStockLevel && (
-                          <span className="text-[10px] text-red-500 font-medium">Low Stock</span>
+                          <span className="text-[10px] text-red-500 font-medium">مخزون منخفض</span>
                         )}
                       </div>
                     </td>
@@ -346,15 +394,15 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                         {item.location}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-left">
                       <div className="flex items-center justify-end gap-2">
                          <button 
                           onClick={() => openOutputModal(item)}
                           disabled={item.quantity <= 0}
                           className="flex items-center gap-1 px-3 py-1.5 bg-orange-50 text-orange-700 hover:bg-orange-100 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          title="Register Stock Output"
+                          title="تسجيل خروج مخزون"
                         >
-                          <LogOut size={14} /> Out
+                          <LogOut size={14} /> صرف
                         </button>
                         <div className="w-px h-6 bg-slate-200 mx-1"></div>
                         <button 
@@ -366,7 +414,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                         <button 
                           onClick={() => setItemToDelete(item)}
                           className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete Item"
+                          title="حذف العنصر"
                         >
                           <Trash2 size={16} />
                         </button>
@@ -388,10 +436,10 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                 <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600">
                     <AlertCircle size={24} />
                 </div>
-                <h3 className="text-lg font-bold text-slate-800 mb-2">Delete Item?</h3>
+                <h3 className="text-lg font-bold text-slate-800 mb-2">حذف العنصر؟</h3>
                 <p className="text-slate-500 text-sm mb-6">
-                  Are you sure you want to delete <span className="font-semibold text-slate-800">"{itemToDelete.name}"</span>? 
-                  This action cannot be undone.
+                  هل أنت متأكد من حذف <span className="font-semibold text-slate-800">"{itemToDelete.name}"</span>؟ 
+                  لا يمكن التراجع عن هذا الإجراء.
                 </p>
                 
                 <div className="flex gap-3">
@@ -399,13 +447,13 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                     onClick={() => setItemToDelete(null)}
                     className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 text-sm font-medium transition-colors"
                   >
-                    Cancel
+                    إلغاء
                   </button>
                   <button 
                     onClick={confirmDelete}
                     className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium transition-colors"
                   >
-                    Delete
+                    حذف
                   </button>
                 </div>
              </div>
@@ -419,7 +467,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
             <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
               <h3 className="text-lg font-bold text-slate-800">
-                {isEditing ? 'Edit Item' : 'Add New Item'}
+                {isEditing ? 'تعديل العنصر' : 'إضافة عنصر جديد'}
               </h3>
               <button onClick={closeModal} className="text-slate-400 hover:text-slate-600">&times;</button>
             </div>
@@ -427,13 +475,13 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-500 uppercase">Item Name</label>
+                <label className="text-xs font-semibold text-slate-500 uppercase">اسم العنصر <span className="text-red-500">*</span></label>
                 <div className="flex gap-2">
                   <input 
                     required
                     type="text" 
                     className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-                    placeholder="e.g., Shure SM58"
+                    placeholder="مثال: ميكروفون شور SM58"
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
                   />
@@ -442,10 +490,10 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                       type="button"
                       onClick={handleSmartFill}
                       disabled={isAnalyzing || !formData.name}
-                      className="bg-purple-50 text-purple-600 hover:bg-purple-100 border border-purple-100 px-3 rounded-lg flex items-center gap-1 text-xs font-medium transition-colors"
+                      className="bg-purple-50 text-purple-600 hover:bg-purple-100 border border-purple-100 px-3 rounded-lg flex items-center gap-1 text-xs font-medium transition-colors whitespace-nowrap"
                     >
                       {isAnalyzing ? <span className="animate-spin">✨</span> : <Sparkles size={14} />}
-                      AI
+                      تحليل ذكي
                     </button>
                   )}
                 </div>
@@ -453,37 +501,37 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Category</label>
+                  <label className="text-xs font-semibold text-slate-500 uppercase">التصنيف</label>
                   <select 
                     className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
                     value={formData.category}
                     onChange={(e) => setFormData({...formData, category: e.target.value as ItemCategory})}
                     disabled={!!categoryFilter}
                   >
-                    <option value={ItemCategory.SONORISATION}>Sonorisation</option>
-                    <option value={ItemCategory.QURAN_BOOK}>Quran Book</option>
-                    <option value={ItemCategory.OTHER}>Other</option>
+                    <option value={ItemCategory.SONORISATION}>صوتيات</option>
+                    <option value={ItemCategory.QURAN_BOOK}>مصاحف</option>
+                    <option value={ItemCategory.OTHER}>أخرى</option>
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Subsection</label>
+                  <label className="text-xs font-semibold text-slate-500 uppercase">القسم الفرعي</label>
                   <input 
                     type="text"
                     list="subsection-suggestions"
                     className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-                    placeholder="e.g. Cables"
+                    placeholder="مثال: كابلات"
                     value={formData.subsection}
                     onChange={(e) => setFormData({...formData, subsection: e.target.value})}
                   />
                   <datalist id="subsection-suggestions">
-                    {subsections.filter(s => s !== 'All').map(s => <option key={s} value={s} />)}
+                    {subsections.filter(s => s !== 'الكل').map(s => <option key={s} value={s} />)}
                   </datalist>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Quantity</label>
+                  <label className="text-xs font-semibold text-slate-500 uppercase">الكمية</label>
                   <input 
                     type="number" 
                     min="0"
@@ -493,20 +541,27 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Location</label>
+                  <label className="text-xs font-semibold text-slate-500 uppercase">المكان / الرف</label>
                   <input 
                     type="text" 
                     className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-                    placeholder="Storage A"
+                    placeholder="المخزن الرئيسي"
                     value={formData.location}
                     onChange={(e) => setFormData({...formData, location: e.target.value})}
                   />
                 </div>
               </div>
+              
+              {/* Validation Error Message */}
+              {validationError && (
+                <div className="bg-red-50 text-red-600 p-3 rounded-lg text-xs font-medium flex items-center gap-2">
+                  <AlertCircle size={14} /> {validationError}
+                </div>
+              )}
 
               <div className="pt-4 flex gap-3">
-                <button type="button" onClick={closeModal} className="flex-1 px-4 py-2 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-sm font-medium">Cancel</button>
-                <button type="submit" className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium">Save</button>
+                <button type="button" onClick={closeModal} className="flex-1 px-4 py-2 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-sm font-medium">إلغاء</button>
+                <button type="submit" className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium">حفظ</button>
               </div>
             </form>
           </div>
@@ -519,22 +574,22 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
            <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-200">
              <div className="bg-orange-50 px-6 py-4 border-b border-orange-100">
                 <h3 className="text-lg font-bold text-orange-800 flex items-center gap-2">
-                  <LogOut size={20} /> Record Stock Output
+                  <LogOut size={20} /> تسجيل خروج مخزون
                 </h3>
                 <p className="text-orange-600/80 text-xs mt-1">
-                  Taking item from inventory
+                  صرف عنصر من المخزون للاستخدام أو التوزيع
                 </p>
              </div>
              
              <form onSubmit={handleOutputSubmit} className="p-6 space-y-4">
                 <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Item</label>
+                  <label className="text-xs font-semibold text-slate-500 uppercase">العنصر</label>
                   <p className="font-medium text-slate-800 text-lg">{selectedItemForOutput.name}</p>
-                  <p className="text-xs text-slate-500">Available: <span className="font-bold">{selectedItemForOutput.quantity}</span></p>
+                  <p className="text-xs text-slate-500">المتاح: <span className="font-bold">{selectedItemForOutput.quantity}</span></p>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Quantity Out</label>
+                  <label className="text-xs font-semibold text-slate-500 uppercase">الكمية المصروفة <span className="text-red-500">*</span></label>
                   <input 
                     type="number" 
                     min="1"
@@ -547,33 +602,40 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Destination / Place</label>
+                  <label className="text-xs font-semibold text-slate-500 uppercase">الوجهة / المكان <span className="text-red-500">*</span></label>
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-2.5 text-slate-400" size={16} />
+                    <MapPin className="absolute right-3 top-2.5 text-slate-400" size={16} />
                     <input 
                       type="text" 
                       required
-                      placeholder="e.g. Mosque Main Hall, Event A"
-                      className="w-full border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none"
+                      placeholder="مثال: القاعة الرئيسية، حدث خيري"
+                      className="w-full border border-slate-200 rounded-lg pr-9 pl-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none"
                       value={outputDestination}
                       onChange={(e) => setOutputDestination(e.target.value)}
                     />
                   </div>
                 </div>
 
+                {/* Validation Error Message */}
+                {validationError && (
+                  <div className="bg-red-50 text-red-600 p-3 rounded-lg text-xs font-medium flex items-center gap-2">
+                    <AlertCircle size={14} /> {validationError}
+                  </div>
+                )}
+
                 <div className="pt-2">
                   <button 
                     type="submit" 
                     className="w-full bg-orange-600 text-white py-3 rounded-xl font-semibold hover:bg-orange-700 transition-colors flex items-center justify-center gap-2"
                   >
-                    Confirm Output <ArrowRight size={18} />
+                    تأكيد الصرف <ArrowLeft size={18} />
                   </button>
                   <button 
                     type="button"
                     onClick={() => setIsOutputModalOpen(false)}
                     className="w-full text-slate-500 py-2 text-sm hover:text-slate-800 mt-2"
                   >
-                    Cancel
+                    إلغاء
                   </button>
                 </div>
              </form>
